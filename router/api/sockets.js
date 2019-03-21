@@ -11,8 +11,11 @@ module.exports = function (app) {
   io.on('connection', function (socket) {
     // Session management
     socket.on('join', function (data) {
-      if (!data || !data.sessionId) return
+      if (!data || !data.sessionId) {
+        return
+      }
       console.log('Joining session...', data.sessionId)
+
       SessionCtrl.joinSession(
         {
           sessionId: data.sessionId,
@@ -23,12 +26,36 @@ module.exports = function (app) {
           if (err) {
             console.log('Could not join session')
             io.emit('error', err)
-          } else {
-            socket.join(data.sessionId)
-            console.log('Session joined:', session._id)
-            io.emit('sessions', SessionCtrl.getSocketSessions())
-            io.to(session._id).emit('session-change', session)
+            return
           }
+
+          const sessionParticipants = [
+            session.volunteer || { _id: '' },
+            session.student || { _id: '' }
+          ]
+          console.log('Session participants: ')
+          console.log(sessionParticipants.map(e => e._id.toString()))
+
+          const joinerIsNotSessionParticipant =
+            sessionParticipants.findIndex(
+              participant => participant._id.toString() === data.user._id
+            ) === -1
+
+          console.log(
+            'joiner is a participant? ' + !joinerIsNotSessionParticipant
+          )
+
+          // Don't let anyone but the session's student or volunteer join the
+          // session
+          if (joinerIsNotSessionParticipant) {
+            console.log('Could not join session')
+            io.emit('error', err)
+            return
+          }
+
+          socket.join(data.sessionId)
+          io.emit('sessions', SessionCtrl.getSocketSessions())
+          io.to(session._id).emit('session-change', session)
         }
       )
     })
