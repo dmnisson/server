@@ -90,14 +90,16 @@ sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
 
 //
 sessionSchema.methods.joinUser = function (user, cb) {
-  if (user.isVolunteer) {
+  if (user.isVolunteer && !this.volunteer) {
     this.volunteer = user
     this.volunteerJoinedAt = new Date()
-  } else {
+  } else if (!this.student) {
     this.student = user
   }
+
   this.save(cb)
 }
+
 sessionSchema.methods.leaveUser = function (user, cb) {
   // below should not save volunteer/user to null, we need to be able to see who the volunteer and student user were
   // should set this.endedAt to Date.now and end the session, both users see the session ended regardless of who ended it
