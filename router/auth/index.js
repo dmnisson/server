@@ -10,6 +10,7 @@ var ResetPasswordCtrl = require('../../controllers/ResetPasswordCtrl')
 var config = require('../../config.js')
 var User = require('../../models/User.js')
 
+// Validation functions
 function checkPassword (password) {
   if (password.length < 8) {
     return 'Password must be 8 characters or longer'
@@ -129,6 +130,7 @@ module.exports = function (app) {
     var firstName = req.body.firstName
 
     var lastName = req.body.lastName
+    
 
     if (!email || !password) {
       return res.json({
@@ -143,9 +145,9 @@ module.exports = function (app) {
         err: checkResult
       })
     }
-
+    
     var user = new User()
-    user.email = email
+    user.email = email    
     user.isVolunteer = !(code === undefined)
     user.registrationCode = code
     user.highschool = highSchool

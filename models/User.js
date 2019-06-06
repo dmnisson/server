@@ -38,7 +38,17 @@ var userSchema = new mongoose.Schema({
   groupIdentification: [String],
   computerAccess: [String],
   preferredTimes: [String],
-  phone: String,
+  phone: { 
+     type: String,
+     validate: {
+       validator: function(v) {
+         // see http://regexlib.com/REDetails.aspx?regexp_id=58
+         var re = /^([0-9]( |-)?)?(\(?[0-9]{3}\)?|[0-9]{3})( |-)?([0-9]{3}( |-)?[0-9]{4}|[a-zA-Z0-9]{7})$/;
+         return re.test(v);
+       },
+       message: '{VALUE} is not a valid U.S. phone number'
+     }
+  },
   highschool: String,
   currentGrade: String,
   expectedGraduation: String,
