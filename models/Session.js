@@ -88,12 +88,21 @@ sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
   })
 }
 
-//
+// this method should callback with an error on attempts to join by non-participants
+// so that SessionCtrl knows to disconnect the socket
 sessionSchema.methods.joinUser = function (user, cb) {
-  if (user.isVolunteer && !this.volunteer) {
-    this.volunteer = user
+  if (user.isVolunteer) {
+    if (this.volunteer) {
+      cb('A volunteer has already joined this session.')
+    } else {
+      this.volunteer = user
+    }
     this.volunteerJoinedAt = new Date()
-  } else if (!this.student) {
+  } else if (this.student) {
+    if (this.student != user._id) {
+      cb('A student has already joined this session.')
+    }
+  } else {
     this.student = user
   }
 
