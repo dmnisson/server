@@ -59,6 +59,7 @@ module.exports = function (app) {
           if (joinerIsNotSessionParticipant) {
             console.log('Could not join session')
             io.emit('error', err)
+            socket.emit('bump', err)
             return
           }
 
