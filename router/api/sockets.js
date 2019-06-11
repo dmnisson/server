@@ -5,6 +5,7 @@ const socket = require('socket.io')
 
 const config = require('../../config.js')
 const SessionCtrl = require('../../controllers/SessionCtrl.js')
+const helpers = require('./helpers.js')
 
 // Create an HTTPS server if in production, otherwise use HTTP.
 const createServer = app => {
@@ -47,17 +48,7 @@ module.exports = function (app) {
             return
           }
 
-          const sessionParticipants = [
-            session.volunteer || { _id: '' },
-            session.student || { _id: '' }
-          ]
-          console.log('Session participants: ')
-          console.log(sessionParticipants.map(e => e._id.toString()))
-
-          const joinerIsNotSessionParticipant =
-            sessionParticipants.findIndex(
-              participant => participant._id.toString() === data.user._id
-            ) === -1
+          const joinerIsNotSessionParticipant = helpers.isNotSessionParticipant(session, data.user)
 
           console.log(
             'joiner is a participant? ' + !joinerIsNotSessionParticipant
@@ -115,6 +106,14 @@ module.exports = function (app) {
           sessionId: data.sessionId
         },
         function (err, session) {
+
+          // Don't let anyone but the session's student or volunteer create messages
+          if (helpers.isNotSessionParticipant(session, data.user)) {
+            console.log('Could not deliver message')
+            io.emit('error', err)
+            return
+          }
+        
           session.saveMessage(message, function (err, savedMessage) {
             io.to(data.sessionId).emit('messageSend', {
               contents: savedMessage.contents,
@@ -130,98 +129,130 @@ module.exports = function (app) {
     })
 
     // Whiteboard interaction
+    // all of this is now blocked for non-participants
 
     socket.on('drawClick', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('draw', {
-        x: data.x,
-        y: data.y,
-        type: data.type
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('draw', {
+          x: data.x,
+          y: data.y,
+          type: data.type
+        })
       })
     })
 
     socket.on('saveImage', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('save')
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('save')
+      })
     })
 
     socket.on('undoClick', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('undo')
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('undo')
+      })
     })
 
     socket.on('clearClick', function (data) {
       if (!data || !data.sessionId) return
-      io.to(data.sessionId).emit('clear')
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        io.to(data.sessionId).emit('clear')
+      })
     })
 
     socket.on('drawing', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('draw')
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('draw')
+      })
     })
 
     socket.on('end', function (data) {
       if (!data || !data.sessionId) return
-
-      SessionCtrl.get(
-        {
-          sessionId: data.sessionId
-        },
-        function (err, session) {
-          session.saveWhiteboardUrl(data.whiteboardUrl)
-          socket.broadcast.to(data.sessionId).emit('end', data)
-        }
-      )
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        session.saveWhiteboardUrl(data.whiteboardUrl)
+        socket.broadcast.to(data.sessionId).emit('end', data)
+      })
     })
 
     socket.on('changeColor', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('color', data.color)
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('color', data.color)
+      })
     })
 
     socket.on('changeWidth', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('width', data.width)
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('width', data.width)
+      })
     })
 
     socket.on('dragStart', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('dstart', {
-        x: data.x,
-        y: data.y,
-        color: data.color
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('dstart', {
+          x: data.x,
+          y: data.y,
+          color: data.color
+        })
       })
     })
 
     socket.on('dragAction', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('drag', {
-        x: data.x,
-        y: data.y,
-        color: data.color
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('drag', {
+          x: data.x,
+          y: data.y,
+          color: data.color
+        })
       })
     })
 
     socket.on('dragEnd', function (data) {
       if (!data || !data.sessionId) return
-      socket.broadcast.to(data.sessionId).emit('dend', {
-        x: data.x,
-        y: data.y,
-        color: data.color
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        socket.broadcast.to(data.sessionId).emit('dend', {
+          x: data.x,
+          y: data.y,
+          color: data.color
+        })
       })
     })
 
     socket.on('insertText', function (data) {
       if (!data || !data.sessionId) return
-      io.to(data.sessionId).emit('text', {
-        text: data.text,
-        x: data.x,
-        y: data.y
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        io.to(data.sessionId).emit('text', {
+          text: data.text,
+          x: data.x,
+          y: data.y
+        })
       })
     })
 
     socket.on('resetScreen', function (data) {
-      io.to(data.sessionId).emit('reset')
+      helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
+        if (err) return
+        io.to(data.sessionId).emit('reset')
+      })
     })
   })
 
