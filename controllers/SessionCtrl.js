@@ -177,14 +177,6 @@ module.exports = {
     var type = options.type
     var subTopic = options.subTopic
 
-    if (!userId) {
-      cb('Cannot create a session without a user id', null)
-    } else if (user.isVolunteer) {
-      cb('Volunteers cannot create new sessions', null)
-    } else if (!type) {
-      cb('Must provide a type for a new session', null)
-    }
-
     var session = new Session({
       student: userId,
       type: type,

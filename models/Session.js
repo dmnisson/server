@@ -4,16 +4,37 @@ var Message = require('./Message')
 
 var validTypes = ['Math', 'College']
 
+// the User model schema is loaded for purposes of validation
+// TODO: can we do this validation without loading the whole User model?
+const User = require('./User')
+
 var sessionSchema = new mongoose.Schema({
   student: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-    // TODO: validate isVolunteer: false
+    ref: 'User',
+    validate: {
+      isAsync: true,
+      validator: function(v, cb) {
+        var msg = `User ${v} is a volunteer`
+        User.findById(v, function(err, user) {
+          cb(!user.isVolunteer, msg)
+        })        
+      }
+    },
+    required: [true, 'A session requires a student user ID']
   },
   volunteer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-    // TODO: validate isVolunteer: true
+    ref: 'User',
+    validate: {
+      isAsync: true,
+      validator: function(v, cb) {
+        var msg = `User ${v} is a student`
+        User.findById(v, function(err, user) {
+          cb(user.isVolunteer, msg)
+        })        
+      }
+    }
   },
   type: {
     type: String,
@@ -25,7 +46,8 @@ var sessionSchema = new mongoose.Schema({
         })
       },
       message: '{VALUE} is not a valid type'
-    }
+    },
+    required: [true, 'A session needs a type']
   },
 
   subTopic: {
