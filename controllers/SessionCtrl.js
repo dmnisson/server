@@ -229,9 +229,13 @@ module.exports = {
 
       session.joinUser(user, function (err, savedSession) {
         if (err) {
+          console.log(err)
           sessionManager.disconnect({
             socket: socket
           })
+        }
+        if (!savedSession) {
+          console.log('!!! no saved session on join ')
         }
         Session.populate(savedSession, 'student volunteer', function (
           err,

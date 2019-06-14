@@ -4,22 +4,19 @@ var Message = require('./Message')
 
 var validTypes = ['Math', 'College']
 
-// helper to perform MongoDB query on a field of a document only if necessary
-// i.e. if v is set to the document ID instead of the document, and call back
-// with the result of a validator on the property
-function queryIfNecessary(v, collectionName, property, msg, cb, validator) {
-  if (typeof(v[property]) === "undefined") {
+function validateFieldInRefDocument(v, collectionName, fieldName, msg, cb) {
+  if (typeof(v[fieldName]) === "undefined") {
     // query the database
     // doing this with raw MongoDB query so we don't couple tightly to User.js
     mongoose.connection.db.collection(collectionName).findOne({"_id": v})
       .then(function(result) {
-        cb(validator(result[property]), msg)
+        cb(v[fieldName], msg)
       })
       .catch(function(error) {
-        cb(false, error)
+        cb(false, error.toString())
       })
   } else {
-    cb(validator(v[property]), msg)
+    cb(v[fieldName], msg)
   }
 }
 
@@ -31,9 +28,8 @@ var sessionSchema = new mongoose.Schema({
       isAsync: true,
       validator: function(v, cb) {
         var msg = `User ${v} is a volunteer`
-        
-        queryIfNecessary(v, 'users', 'isVolunteer', msg, cb, function(value) {
-          return !value
+        validateFieldInRefDocument(v, 'users', 'isVolunteer', msg, function(value, msg) {
+          cb(!value, msg)
         })
       }
     },
@@ -46,9 +42,8 @@ var sessionSchema = new mongoose.Schema({
       isAsync: true,
       validator: function(v, cb) {
         var msg = `User ${v} is a student`
-        
-        queryIfNecessary(v, 'users', 'isVolunteer', msg, cb, function(value) {
-          return value
+        validateFieldInRefDocument(v, 'users', 'isVolunteer', msg, function(value, msg) {
+          cb(value, msg)
         })
       }
     }
@@ -117,6 +112,7 @@ sessionSchema.methods.saveMessage = function (messageObj, cb) {
   })
 }
 
+// TODO: is it necessary to use this function instead of just Session.updateOne()?
 sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
   var session = this
   this.whiteboardUrl = whiteboardUrl
@@ -127,7 +123,7 @@ sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
   })
 }
 
-//
+// now that we've added validation logic, no need to validate again here
 sessionSchema.methods.joinUser = function (user, cb) {
   if (user.isVolunteer) {
     this.volunteer = user
