@@ -7,11 +7,11 @@ var validTypes = ['Math', 'College']
 // helper to perform MongoDB query on a field of a document only if necessary
 // i.e. if v is set to the document ID instead of the document, and call back
 // with the result of a validator on the property
-function queryIfNecessary(v, property, msg, cb, validator) {
+function queryIfNecessary(v, collectionName, property, msg, cb, validator) {
   if (typeof(v[property]) === "undefined") {
     // query the database
     // doing this with raw MongoDB query so we don't couple tightly to User.js
-    mongoose.connection.db.collection('users').findOne({"_id": v})
+    mongoose.connection.db.collection(collectionName).findOne({"_id": v})
       .then(function(result) {
         cb(validator(result[property]), msg)
       })
@@ -32,7 +32,7 @@ var sessionSchema = new mongoose.Schema({
       validator: function(v, cb) {
         var msg = `User ${v} is a volunteer`
         
-        queryIfNecessary(v, 'isVolunteer', msg, cb, function(value) {
+        queryIfNecessary(v, 'users', 'isVolunteer', msg, cb, function(value) {
           return !value
         })
       }
@@ -47,7 +47,7 @@ var sessionSchema = new mongoose.Schema({
       validator: function(v, cb) {
         var msg = `User ${v} is a student`
         
-        queryIfNecessary(v, 'isVolunteer', msg, cb, function(value) {
+        queryIfNecessary(v, 'users', 'isVolunteer', msg, cb, function(value) {
           return value
         })
       }
