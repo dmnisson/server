@@ -4,9 +4,24 @@ var Message = require('./Message')
 
 var validTypes = ['Math', 'College']
 
-// the User model schema is loaded for purposes of validation
-// TODO: can we do this validation without loading the whole User model?
-const User = require('./User')
+// helper to perform MongoDB query on a field of a document only if necessary
+// i.e. if v is set to the document ID instead of the document, and call back
+// with the result of a validator on the property
+function queryIfNecessary(v, property, msg, cb, validator) {
+  if (typeof(v[property]) === "undefined") {
+    // query the database
+    // doing this with raw MongoDB query so we don't couple tightly to User.js
+    mongoose.connection.db.collection('users').findOne({"_id": v})
+      .then(function(result) {
+        cb(validator(result[property]), msg)
+      })
+      .catch(function(error) {
+        cb(false, error)
+      })
+  } else {
+    cb(validator(v[property]), msg)
+  }
+}
 
 var sessionSchema = new mongoose.Schema({
   student: {
@@ -16,9 +31,10 @@ var sessionSchema = new mongoose.Schema({
       isAsync: true,
       validator: function(v, cb) {
         var msg = `User ${v} is a volunteer`
-        User.findById(v, function(err, user) {
-          cb(!user.isVolunteer, msg)
-        })        
+        
+        queryIfNecessary(v, 'isVolunteer', msg, cb, function(value) {
+          return !value
+        })
       }
     },
     required: [true, 'A session requires a student user ID']
@@ -30,9 +46,10 @@ var sessionSchema = new mongoose.Schema({
       isAsync: true,
       validator: function(v, cb) {
         var msg = `User ${v} is a student`
-        User.findById(v, function(err, user) {
-          cb(user.isVolunteer, msg)
-        })        
+        
+        queryIfNecessary(v, 'isVolunteer', msg, cb, function(value) {
+          return value
+        })
       }
     }
   },
