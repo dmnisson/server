@@ -183,7 +183,8 @@ module.exports = function (app) {
       if (!data || !data.sessionId) return
       helpers.verifySessionParticipantBySessionId(data.sessionId, data.user, function(err, session) {
         if (err) return
-        session.saveWhiteboardUrl(data.whiteboardUrl)
+        session.whiteboardUrl = data.whiteboardUrl
+        session.save()
         socket.broadcast.to(data.sessionId).emit('end', data)
       })
     })
