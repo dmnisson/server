@@ -88,8 +88,6 @@ sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
   })
 }
 
-// this method should callback with an error on attempts to join by non-participants
-// so that SessionCtrl knows to disconnect the socket
 sessionSchema.methods.joinUser = function (user, cb) {
   if (user.isVolunteer) {
     if (this.volunteer) {
