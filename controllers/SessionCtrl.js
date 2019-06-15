@@ -31,14 +31,10 @@ SocketSession.prototype.join = function (options) {
 }
 
 SocketSession.prototype.leave = function (socket) {
-  var userId
-
-  Object.keys(this.sockets).some(function (socketUserId) {
-    if (this.sockets[socketUserId] === socket) {
-      userId = socketUserId
-      return true
-    }
-  }, this)
+  var userIdEntry = Object.entries(this.sockets).find(function (e) {
+    return e[1] === socket
+  })
+  var userId = userIdEntry ? userIdEntry[0] : null
 
   console.log('User', userId, 'leaving from', this.session._id)
 
@@ -67,6 +63,13 @@ var SessionManager = function () {
   this._sessions = {} // id => SocketSession
 }
 
+SessionManager.prototype.getSocketSessionBySocket = function (socket) {
+  var socketSessionEntry = Object.entries(this._sessions).find(function(e) {
+    return e[1].hasSocket(socket)
+  })
+  return socketSessionEntry ? socketSessionEntry[1] : null
+}
+
 SessionManager.prototype.connect = function (options) {
   const session = options.session
   const user = options.user
@@ -91,14 +94,9 @@ SessionManager.prototype.connect = function (options) {
 SessionManager.prototype.disconnect = function (options) {
   var socket = options.socket
 
-  var socketSession, session
-  Object.keys(this._sessions).some(function (sessionId) {
-    var s = this._sessions[sessionId]
-    if (s.hasSocket(socket)) {
-      socketSession = s
-      return true
-    }
-  }, this)
+  var socketSession = this.getSocketSessionBySocket(socket)
+
+  var session
 
   if (socketSession) {
     session = socketSession.session
@@ -141,32 +139,18 @@ SessionManager.prototype.getById = function (sessionId) {
 }
 
 SessionManager.prototype.getUserBySocket = function (socket) {
-  var socketSession
-  Object.keys(this._sessions).some(function (sessionId) {
-    var s = this._sessions[sessionId]
-    if (s.hasSocket(socket)) {
-      socketSession = s
-      return true
-    }
-  }, this)
-
+  var socketSession = this.getSocketSessionBySocket(socket)
   if (!socketSession) {
     return false
   }
 
-  var userId
-  Object.keys(socketSession.sockets).some(function (joinedUserId) {
-    if (socketSession.sockets[joinedUserId] === socket) {
-      userId = joinedUserId
-      return true
-    }
+  var userId = Object.keys(socketSession.sockets).find(function (joinedUserId) {
+    return socketSession.sockets[joinedUserId] === socket
   })
 
-  var userIndex = socketSession.users.findIndex(function (joinedUser) {
+  return socketSession.users.find(function (joinedUser) {
     return joinedUser._id === userId
   })
-
-  return socketSession.users[userIndex]
 }
 
 var sessionManager = new SessionManager()
