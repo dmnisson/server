@@ -1,5 +1,6 @@
 var Session = require('../models/Session')
 var twilioService = require('../services/twilio')
+var ObjectId = require('mongodb').ObjectId
 
 // A socket session tracks a session with its users and sockets
 var SocketSession = function (options) {
@@ -208,13 +209,29 @@ module.exports = {
       Session.findOne({ _id: sessionId }, cb)
     }
   },
-
-  findLatest: function (attrs, cb) {
-    Session.find(attrs)
-      .sort({ createdAt: -1 })
-      .limit(1)
-      .findOne()
-      .exec(cb)
+  
+  current: function(options, cb) {
+    const userId = options.userId
+    const isVolunteer = options.isVolunteer
+  
+    let studentId = null
+    let volunteerId = null
+  
+    if (isVolunteer) {
+      volunteerId = ObjectId(userId)
+    } else {
+      studentId = ObjectId(userId)
+    }
+  
+    Session.findLatest(
+      {
+        $and: [
+          { endedAt: null },
+          {
+            $or: [{ student: studentId }, { volunteer: volunteerId }]
+          }
+        ]
+      }, cb)
   },
 
   // Return all current socket sessions as array
