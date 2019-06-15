@@ -78,14 +78,22 @@ sessionSchema.methods.saveMessage = function (messageObj, cb) {
   })
 }
 
-sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
-  var session = this
-  this.whiteboardUrl = whiteboardUrl
-  this.save(function (err) {
-    if (cb) {
-      cb(null, session.whiteboardUrl)
-    }
-  })
+// sessionSchema.methods.saveWhiteboardUrl = function (whiteboardUrl, cb) {
+//   var session = this
+//   this.whiteboardUrl = whiteboardUrl
+//   this.save(function (err) {
+//     if (cb) {
+//       cb(null, session.whiteboardUrl)
+//     }
+//   })
+// }
+
+sessionSchema.statics.findLatest = function (attrs, cb) {
+  this.find(attrs)
+    .sort({ createdAt: -1 })
+    .limit(1)
+    .findOne()
+    .exec(cb)
 }
 
 sessionSchema.methods.joinUser = function (user, cb) {

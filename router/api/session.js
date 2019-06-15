@@ -1,5 +1,4 @@
 var SessionCtrl = require('../../controllers/SessionCtrl')
-var ObjectId = require('mongodb').ObjectId
 
 var helpers = require('./helpers.js')
 
@@ -87,25 +86,11 @@ module.exports = function (router) {
     const data = req.body || {}
     const userId = data.user_id
     const isVolunteer = data.is_volunteer
-
-    let studentId = null
-    let volunteerId = null
-
-    if (isVolunteer) {
-      volunteerId = ObjectId(userId)
-    } else {
-      studentId = ObjectId(userId)
-    }
-
-    SessionCtrl.findLatest(
-      {
-        $and: [
-          { endedAt: null },
-          {
-            $or: [{ student: studentId }, { volunteer: volunteerId }]
-          }
-        ]
-      },
+    
+    SessionCtrl.current({
+      userId: userId,
+      isVolunteer: isVolunteer
+    },
       function (err, session) {
         if (err) {
           res.json({ err: err })
