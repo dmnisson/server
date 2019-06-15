@@ -245,18 +245,21 @@ module.exports = {
           sessionManager.disconnect({
             socket: socket
           })
+          cb(err)
         }
-        Session.populate(savedSession, 'student volunteer', function (
-          err,
-          populatedSession
-        ) {
-          sessionManager.connect({
-            session: session,
-            user: user,
-            socket: socket
+        else {
+          Session.populate(savedSession, 'student volunteer', function (
+            err,
+            populatedSession
+          ) {
+            sessionManager.connect({
+              session: session,
+              user: user,
+              socket: socket
+            })
+            cb(err, populatedSession)
           })
-          cb(err, populatedSession)
-        })
+        }
       })
     })
   },
