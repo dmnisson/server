@@ -45,9 +45,11 @@ module.exports = function (app) {
           if (err) {
             console.log('Could not join session')
             io.emit('error', err)
+            socket.emit('bump', err)
             return
           }
 
+/*
           const joinerIsNotSessionParticipant = helpers.isNotSessionParticipant(session, data.user)
 
           console.log(
@@ -62,6 +64,7 @@ module.exports = function (app) {
             socket.emit('bump', err)
             return
           }
+*/
 
           socket.join(data.sessionId)
           io.emit('sessions', SessionCtrl.getSocketSessions())
