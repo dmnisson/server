@@ -1,7 +1,7 @@
 const SessionCtrl = require('../../controllers/SessionCtrl.js')
 
 module.exports = {
-  isNotSessionParticipant: function(session, user) {
+  isNotSessionParticipant: function (session, user) {
     const sessionParticipants = [
       session.volunteer || { _id: '' },
       session.student || { _id: '' }
@@ -13,23 +13,20 @@ module.exports = {
       participant => participant._id.toString() === user._id.toString()
     ) === -1
   },
-  
-  verifySessionParticipantBySessionId: function(sessionId, user, cb) {
+
+  verifySessionParticipantBySessionId: function (sessionId, user, cb) {
     const helpers = this
-      
+
     SessionCtrl.get({
       sessionId: sessionId
-    }, function(err, session) {
+    }, function (err, session) {
       if (err) {
         cb(err)
-      }
-      else if (!user) {
+      } else if (!user) {
         cb('This action requires a user ID')
-      }
-      else if (helpers.isNotSessionParticipant(session, user)) {
+      } else if (helpers.isNotSessionParticipant(session, user)) {
         cb('Only session participants can perform this action')
-      }
-      else {
+      } else {
         cb(null, session)
       }
     })
