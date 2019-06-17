@@ -99,7 +99,7 @@ sessionSchema.statics.findLatest = function (attrs, cb) {
 sessionSchema.methods.joinUser = function (user, cb) {
   if (user.isVolunteer) {
     if (this.volunteer) {
-      if (this.volunteer._id != user._id) {
+      if (this.volunteer._id !== user._id) {
         cb('A volunteer has already joined this session.')
         return
       }
@@ -108,7 +108,7 @@ sessionSchema.methods.joinUser = function (user, cb) {
     }
     this.volunteerJoinedAt = new Date()
   } else if (this.student) {
-    if (this.student._id != user._id) {
+    if (this.student._id !== user._id) {
       cb('A student has already joined this session.')
       return
     }
