@@ -89,7 +89,6 @@ module.exports = function (router) {
       userId: userId,
       isVolunteer: isVolunteer
     },
-<<<<<<< HEAD
     function (err, session) {
       if (err) {
         res.json({ err: err })
