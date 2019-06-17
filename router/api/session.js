@@ -38,8 +38,6 @@ module.exports = function (router) {
         sessionId: sessionId
       },
       function (err, session) {
-        
-      
         if (err) {
           res.json({ err: err })
         } else if (!session) {
@@ -86,23 +84,22 @@ module.exports = function (router) {
     const data = req.body || {}
     const userId = data.user_id
     const isVolunteer = data.is_volunteer
-    
+
     SessionCtrl.current({
       userId: userId,
       isVolunteer: isVolunteer
     },
-      function (err, session) {
-        if (err) {
-          res.json({ err: err })
-        } else if (!session) {
-          res.json({ err: 'No session found' })
-        } else {
-          res.json({
-            sessionId: session._id,
-            data: session
-          })
-        }
+    function (err, session) {
+      if (err) {
+        res.json({ err: err })
+      } else if (!session) {
+        res.json({ err: 'No session found' })
+      } else {
+        res.json({
+          sessionId: session._id,
+          data: session
+        })
       }
-    )
+    })
   })
 }
