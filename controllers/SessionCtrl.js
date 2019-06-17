@@ -64,7 +64,7 @@ var SessionManager = function () {
 }
 
 SessionManager.prototype.getSocketSessionBySocket = function (socket) {
-  var socketSessionEntry = Object.entries(this._sessions).find(function(e) {
+  var socketSessionEntry = Object.entries(this._sessions).find(function (e) {
     return e[1].hasSocket(socket)
   })
   return socketSessionEntry ? socketSessionEntry[1] : null
@@ -193,20 +193,20 @@ module.exports = {
       Session.findOne({ _id: sessionId }, cb)
     }
   },
-  
-  current: function(options, cb) {
+
+  current: function (options, cb) {
     const userId = options.userId
     const isVolunteer = options.isVolunteer
-  
+
     let studentId = null
     let volunteerId = null
-  
+
     if (isVolunteer) {
       volunteerId = ObjectId(userId)
     } else {
       studentId = ObjectId(userId)
     }
-  
+
     Session.findLatest(
       {
         $and: [
@@ -247,8 +247,7 @@ module.exports = {
             socket: socket
           })
           cb(err)
-        }
-        else {
+        } else {
           Session.populate(savedSession, 'student volunteer', function (
             err,
             populatedSession
