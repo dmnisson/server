@@ -79,6 +79,10 @@ function send (phoneNumber, name, subtopic) {
 module.exports = {
   notify: function (type, subtopic) {
     getAvailableVolunteersFromDb(subtopic).exec(function (err, persons) {
+      if (err) {
+        console.log(`Could not send notifications: ${err}`)
+        return
+      }
       persons.forEach(function (person) {
         send(person.phone, person.firstname, subtopic)
       })
