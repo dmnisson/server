@@ -118,6 +118,10 @@ module.exports = function (app) {
           }
 
           session.saveMessage(message, function (err, savedMessage) {
+            if (err) {
+              console.log('Could not save message to database')
+              io.emit('error', err)
+            }
             io.to(data.sessionId).emit('messageSend', {
               contents: savedMessage.contents,
               name: data.user.firstname,
