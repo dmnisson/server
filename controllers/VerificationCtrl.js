@@ -33,7 +33,7 @@ module.exports = {
               console.log(`Could not generate verification token: ${err}`)
               return done(err)
             }
-          
+
             var token = buf.toString('hex')
 
             user.verificationToken = token
